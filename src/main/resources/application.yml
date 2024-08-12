@@ -1,0 +1,17 @@
+spring:
+  application:
+    name: orderms
+  data:
+    mongodb:
+      authentication-database: admin
+      database: orderdb
+      host: localhost
+      port: 27017
+      username: admin
+      password: secret
+      auto-index-creation: true
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: admin
+    password: secret

@@ -1,5 +1,21 @@
 package tech.buildrun.btgpactual.orderms.service;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.group;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.match;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.newAggregation;
+
+import java.math.BigDecimal;
+
 import org.bson.Document;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -14,30 +30,24 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.query.Criteria;
+
 import tech.buildrun.btgpactual.orderms.entity.OrderEntity;
 import tech.buildrun.btgpactual.orderms.factory.OrderCreatedEventFactory;
 import tech.buildrun.btgpactual.orderms.factory.OrderEntityFactory;
 import tech.buildrun.btgpactual.orderms.repository.OrderRepository;
-
-import java.math.BigDecimal;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
-import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
+import tech.buildrun.btgpactual.orderms.service.impl.OrderServiceImpl;
 
 @ExtendWith(MockitoExtension.class)
 class OrderServiceTest {
+
+    @InjectMocks
+    OrderServiceImpl orderService;
 
     @Mock
     OrderRepository orderRepository;
 
     @Mock
     MongoTemplate mongoTemplate;
-
-    @InjectMocks
-    OrderService orderService;
 
     @Captor
     ArgumentCaptor<OrderEntity> orderEntityCaptor;
@@ -85,8 +95,10 @@ class OrderServiceTest {
         void shouldCalculateOrderTotalWithSuccess() {
             // ARRANGE
             var event = OrderCreatedEventFactory.buildWithTwoItens();
-            var totalItem1 = event.itens().getFirst().preco().multiply(BigDecimal.valueOf(event.itens().getFirst().quantidade()));
-            var totalItem2 = event.itens().getLast().preco().multiply(BigDecimal.valueOf(event.itens().getLast().quantidade()));
+            var totalItem1 = event.itens().getFirst().preco()
+                    .multiply(BigDecimal.valueOf(event.itens().getFirst().quantidade()));
+            var totalItem2 = event.itens().getLast().preco()
+                    .multiply(BigDecimal.valueOf(event.itens().getLast().quantidade()));
             var orderTotal = totalItem1.add(totalItem2);
 
             // ACT
@@ -137,13 +149,15 @@ class OrderServiceTest {
             assertEquals(page.getSize(), response.getSize());
             assertEquals(page.getNumber(), response.getNumber());
 
-            assertEquals(page.getContent().getFirst().getOrderId(), response.getContent().getFirst().orderId());
-            assertEquals(page.getContent().getFirst().getCustomerId(), response.getContent().getFirst().customerId());
-            assertEquals(page.getContent().getFirst().getTotal(), response.getContent().getFirst().total());
+            assertEquals(page.getContent().getFirst().getOrderId(), response.getContent().getFirst().getOrderId());
+            assertEquals(page.getContent().getFirst().getCustomerId(),
+                    response.getContent().getFirst().getCustomerId());
+            assertEquals(page.getContent().getFirst().getTotal(),
+                    response.getContent().getFirst().getTotal());
 
         }
     }
-    
+
     @Nested
     class FindTotalOnOrdersByCustomerId {
 
@@ -153,8 +167,9 @@ class OrderServiceTest {
             var customerId = 1L;
             var totalExpected = BigDecimal.valueOf(1);
             var aggregationResult = mock(AggregationResults.class);
-            doReturn(new Document("total",  totalExpected)).when(aggregationResult).getUniqueMappedResult();
-            doReturn(aggregationResult).when(mongoTemplate).aggregate(any(Aggregation.class), anyString(), eq(Document.class));
+            doReturn(new Document("total", totalExpected)).when(aggregationResult).getUniqueMappedResult();
+            doReturn(aggregationResult).when(mongoTemplate).aggregate(any(Aggregation.class), anyString(),
+                    eq(Document.class));
 
             // ACT
             var total = orderService.findTotalOnOrdersByCustomerId(customerId);
@@ -170,8 +185,9 @@ class OrderServiceTest {
             var customerId = 1L;
             var totalExpected = BigDecimal.valueOf(1);
             var aggregationResult = mock(AggregationResults.class);
-            doReturn(new Document("total",  totalExpected)).when(aggregationResult).getUniqueMappedResult();
-            doReturn(aggregationResult).when(mongoTemplate).aggregate(aggregationCaptor.capture(), anyString(), eq(Document.class));
+            doReturn(new Document("total", totalExpected)).when(aggregationResult).getUniqueMappedResult();
+            doReturn(aggregationResult).when(mongoTemplate).aggregate(aggregationCaptor.capture(), anyString(),
+                    eq(Document.class));
 
             // ACT
             orderService.findTotalOnOrdersByCustomerId(customerId);
@@ -180,8 +196,7 @@ class OrderServiceTest {
             var aggregation = aggregationCaptor.getValue();
             var aggregationExpected = newAggregation(
                     match(Criteria.where("customerId").is(customerId)),
-                    group().sum("total").as("total")
-            );
+                    group().sum("total").as("total"));
 
             assertEquals(aggregationExpected.toString(), aggregation.toString());
         }
@@ -192,8 +207,9 @@ class OrderServiceTest {
             var customerId = 1L;
             var totalExpected = BigDecimal.valueOf(1);
             var aggregationResult = mock(AggregationResults.class);
-            doReturn(new Document("total",  totalExpected)).when(aggregationResult).getUniqueMappedResult();
-            doReturn(aggregationResult).when(mongoTemplate).aggregate(any(Aggregation.class), eq("tb_orders"), eq(Document.class));
+            doReturn(new Document("total", totalExpected)).when(aggregationResult).getUniqueMappedResult();
+            doReturn(aggregationResult).when(mongoTemplate).aggregate(any(Aggregation.class), eq("tb_orders"),
+                    eq(Document.class));
 
             // ACT
             orderService.findTotalOnOrdersByCustomerId(customerId);

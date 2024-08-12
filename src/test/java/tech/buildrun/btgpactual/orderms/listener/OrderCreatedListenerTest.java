@@ -1,5 +1,9 @@
 package tech.buildrun.btgpactual.orderms.listener;
 
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -7,18 +11,15 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.messaging.support.MessageBuilder;
-import tech.buildrun.btgpactual.orderms.factory.OrderCreatedEventFactory;
-import tech.buildrun.btgpactual.orderms.service.OrderService;
 
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
+import tech.buildrun.btgpactual.orderms.factory.OrderCreatedEventFactory;
+import tech.buildrun.btgpactual.orderms.service.impl.OrderServiceImpl;
 
 @ExtendWith(MockitoExtension.class)
 class OrderCreatedListenerTest {
 
     @Mock
-    OrderService orderService;
+    OrderServiceImpl orderService;
 
     @InjectMocks
     OrderCreatedListener orderCreatedListener;

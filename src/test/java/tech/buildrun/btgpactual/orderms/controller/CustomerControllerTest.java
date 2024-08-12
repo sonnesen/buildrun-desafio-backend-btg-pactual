@@ -1,5 +1,13 @@
 package tech.buildrun.btgpactual.orderms.controller;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.doReturn;
+
+import java.math.BigDecimal;
+
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -10,25 +18,18 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatusCode;
+
 import tech.buildrun.btgpactual.orderms.factory.OrderResponseFactory;
-import tech.buildrun.btgpactual.orderms.service.OrderService;
-
-import java.math.BigDecimal;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.Mockito.doReturn;
+import tech.buildrun.btgpactual.orderms.service.impl.OrderServiceImpl;
 
 @ExtendWith(MockitoExtension.class)
-class OrderControllerTest {
-
-    @Mock
-    OrderService orderService;
+class CustomerControllerTest {
 
     @InjectMocks
-    OrderController orderController;
+    CustomerController customerController;
+
+    @Mock
+    OrderServiceImpl orderService;
 
     @Captor
     ArgumentCaptor<Long> customerIdCaptor;
@@ -51,7 +52,7 @@ class OrderControllerTest {
                     .when(orderService).findTotalOnOrdersByCustomerId(anyLong());
 
             // ACT - executar o metodo a ser testado
-            var response = orderController.listOrders(customerId, page, pageSize);
+            var response = customerController.getOrdersByCustomer(customerId, page, pageSize);
 
             // ASSERT - verifica se a execucao foi certinha
             assertEquals(HttpStatusCode.valueOf(200), response.getStatusCode());
@@ -64,12 +65,13 @@ class OrderControllerTest {
             var page = 0;
             var pageSize = 10;
             doReturn(OrderResponseFactory.buildWithOneItem())
-                    .when(orderService).findAllByCustomerId(customerIdCaptor.capture(), pageRequestCaptor.capture());
+                    .when(orderService)
+                    .findAllByCustomerId(customerIdCaptor.capture(), pageRequestCaptor.capture());
             doReturn(BigDecimal.valueOf(20.50))
                     .when(orderService).findTotalOnOrdersByCustomerId(customerIdCaptor.capture());
 
             // ACT - executar o metodo a ser testado
-            var response = orderController.listOrders(customerId, page, pageSize);
+            var response = customerController.getOrdersByCustomer(customerId, page, pageSize);
 
             // ASSERT - verifica se a execucao foi certinha
             assertEquals(2, customerIdCaptor.getAllValues().size());
@@ -87,29 +89,31 @@ class OrderControllerTest {
             var pageSize = 10;
             var totalOnOrders = BigDecimal.valueOf(20.50);
             var pagination = OrderResponseFactory.buildWithOneItem();
+
             doReturn(pagination)
                     .when(orderService).findAllByCustomerId(anyLong(), any());
             doReturn(totalOnOrders)
                     .when(orderService).findTotalOnOrdersByCustomerId(anyLong());
 
             // ACT - executar o metodo a ser testado
-            var response = orderController.listOrders(customerId, page, pageSize);
+            var response = customerController.getOrdersByCustomer(customerId, page, pageSize);
 
             // ASSERT - verifica se a execucao foi certinha
             assertNotNull(response);
             assertNotNull(response.getBody());
-            assertNotNull(response.getBody().data());
-            assertNotNull(response.getBody().pagination());
-            assertNotNull(response.getBody().summary());
+            assertNotNull(response.getBody().getData());
+            assertNotNull(response.getBody().getPagination());
+            assertNotNull(response.getBody().getSummary());
 
-            assertEquals(totalOnOrders, response.getBody().summary().get("totalOnOrders"));
+            assertEquals(totalOnOrders, response.getBody().getSummary().getTotalOnOrders());
 
-            assertEquals(pagination.getTotalElements(), response.getBody().pagination().totalElements());
-            assertEquals(pagination.getTotalPages(), response.getBody().pagination().totalPages());
-            assertEquals(pagination.getNumber(), response.getBody().pagination().page());
-            assertEquals(pagination.getSize(), response.getBody().pagination().pageSize());
+            assertEquals(pagination.getTotalElements(),
+                    response.getBody().getPagination().getTotalElements().intValue());
+            assertEquals(pagination.getTotalPages(), response.getBody().getPagination().getTotalPages());
+            assertEquals(pagination.getNumber(), response.getBody().getPagination().getPage());
+            assertEquals(pagination.getSize(), response.getBody().getPagination().getPageSize());
 
-            assertEquals(pagination.getContent(), response.getBody().data());
+            assertEquals(pagination.getContent(), response.getBody().getData());
         }
     }
 

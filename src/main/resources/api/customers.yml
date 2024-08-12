@@ -1,0 +1,112 @@
+openapi: "3.0.3"
+info:
+  title: Customer API
+  version: "1.0"
+  description: Customer API
+servers:
+  - url: http://localhost:8080
+    description: Local server
+tags:
+  - name: Customers
+    description: Operations about customers
+paths:
+  /customers/{customerId}/orders:
+    get:
+      tags:
+        - Customers
+      summary: Get orders by customer
+      description: Get orders by customer
+      operationId: getOrdersByCustomer
+      parameters:
+        - name: customerId
+          in: path
+          description: Customer ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+          example: 1
+        - name: page
+          in: query
+          description: Page number
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 0
+          example: 1
+        - name: pageSize
+          in: query
+          description: Page size
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 10
+          example: 10
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrderByCustomerResponse"
+        "400":
+          description: Bad Request
+        "404":
+          description: Not Found
+        "500":
+          description: Internal Server Error
+
+components:
+  schemas:
+    OrderByCustomerResponse:
+      type: object
+      properties:
+        summary:
+          type: object
+          properties:
+            totalOnOrders:
+              type: number
+              # format: double
+              example: 100.0
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/OrderByCustomerResponseData"
+        pagination:
+          type: object
+          $ref: "#/components/schemas/PaginationData"
+    OrderByCustomerResponseData:
+      type: object
+      properties:
+        orderId:
+          type: integer
+          format: int64
+          example: 1
+        customerId:
+          type: integer
+          format: int64
+          example: 1
+        total:
+          type: number
+          example: 100.0
+    PaginationData:
+      type: object
+      properties:
+        page:
+          type: integer
+          format: int32
+          example: 1
+        pageSize:
+          type: integer
+          format: int32
+          example: 10
+        totalElements:
+          type: integer
+          format: int32
+          example: 100
+        totalPages:
+          type: integer
+          format: int32
+          example: 10

@@ -1,12 +1,13 @@
 package tech.buildrun.btgpactual.orderms.factory;
 
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import tech.buildrun.btgpactual.orderms.entity.OrderEntity;
-import tech.buildrun.btgpactual.orderms.entity.OrderItem;
-
 import java.math.BigDecimal;
 import java.util.List;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+
+import tech.buildrun.btgpactual.orderms.entity.OrderEntity;
+import tech.buildrun.btgpactual.orderms.entity.OrderItem;
 
 public class OrderEntityFactory {
 
